@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VIDEOMONITORAMENTO HUC - V3</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Cabeçalho -->
+        <header>
+            <div class="header-content">
+                <div class="logo">
+                    <h1>VIDEOMONITORAMENTO HUC/ISGH</h1>
+                    <p>Sistema Profissional de Ocorrências</p>
+                </div>
+                <div class="header-info">
+                    <div id="currentTime"></div>
+                    <div style="margin-top: 5px; color: #3b82f6; font-weight: bold;">Versão 3.0 Final - Estável</div>
+                </div>
+            </div>
+        </header>
+
+        <!-- Navegação -->
+        <div class="nav-tabs">
+            <button class="nav-tab active" onclick="showTab('dashboard')">📊 Dashboard</button>
+            <button class="nav-tab" onclick="showTab('occurrences')">📋 Ocorrências</button>
+            <button class="nav-tab" onclick="showTab('camera-report')">🎥 Câmeras</button>
+            <button class="nav-tab" onclick="showTab('reports')">📄 Relatórios</button>
+        </div>
+
+        <!-- Seção Dashboard -->
+        <div id="dashboard" class="content-section active">
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-label">Total de Ocorrências</div>
+                    <div class="stat-value" id="totalOccurrences">0</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Encerradas</div>
+                    <div class="stat-value" id="resolvedCount" style="color: #059669;">0</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Em Andamento</div>
+                    <div class="stat-value" id="pendingCount" style="color: #d97706;">0</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Taxa de Resolução</div>
+                    <div class="stat-value" id="resolutionRate" style="color: #3b82f6;">0%</div>
+                </div>
+            </div>
+
+            <!-- Novos Gráficos do Dashboard -->
+            <div class="charts-grid">
+                <div class="chart-container">
+                    <div class="chart-title">Ocorrências por Tipo</div>
+                    <canvas id="typeChart"></canvas>
+                </div>
+                <div class="chart-container">
+                    <div class="chart-title">Status das Ocorrências</div>
+                    <canvas id="statusChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Seção de Ocorrências -->
+        <div id="occurrences" class="content-section">
+            <div class="btn-group">
+                <button class="btn btn-success" onclick="openNewOccurrenceModal()">➕ Nova Ocorrência</button>
+            </div>
+            <div class="filters-container">
+                <div class="filters-grid">
+                    <div class="filter-group">
+                        <label>Buscar Local/Câmera</label>
+                        <input type="text" id="searchInput" placeholder="Digite para filtrar...">
+                    </div>
+                    <div class="filter-group">
+                        <label>Tipo</label>
+                        <select id="typeFilter"></select>
+                    </div>
+                    <div class="filter-group">
+                        <label>Status</label>
+                        <select id="statusFilter">
+                            <option value="">Todos</option>
+                            <option value="Encerrada">Encerrada</option>
+                            <option value="Em andamento">Em andamento</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th style="width: 30px;"></th>
+                            <th>Data/Hora</th>
+                            <th>Tipo</th>
+                            <th>Local</th>
+                            <th>Status</th>
+                            <th>Operador</th>
+                            <th>Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tableBody"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Seção de Câmeras -->
+        <div id="camera-report" class="content-section">
+            <div class="stats-grid">
+                <div class="stat-card"><div class="stat-label">Total</div><div class="stat-value" id="totalCameras">288</div></div>
+                <div class="stat-card"><div class="stat-label">Online</div><div class="stat-value" id="onlineCameras" style="color: #059669;">0</div></div>
+                <div class="stat-card"><div class="stat-label">Offline</div><div class="stat-value" id="offlineCameras" style="color: #dc2626;">0</div></div>
+                <div class="stat-card"><div class="stat-label">Defeito</div><div class="stat-value" id="defectiveCameras" style="color: #d97706;">0</div></div>
+            </div>
+            <div class="filters-container">
+                <div class="nvr-selector" id="nvrSelector"></div>
+            </div>
+            <div class="camera-grid" id="cameraGrid"></div>
+        </div>
+
+        <!-- Nova Seção de Relatórios -->
+        <div id="reports" class="content-section">
+            <h2 style="color: #1e3a8a; margin-bottom: 20px; font-size: 24px; text-transform: uppercase; letter-spacing: 2px;">Central de Relatórios</h2>
+            
+            <div class="filters-container">
+                <div class="filters-grid">
+                    <div class="filter-group">
+                        <label>Período</label>
+                        <select id="reportPeriodSelect">
+                            <option value="today">Hoje</option>
+                            <option value="week">Última Semana</option>
+                            <option value="month">Este Mês</option>
+                            <option value="year">Este Ano</option>
+                        </select>
+                    </div>
+                    <div class="filter-group" style="justify-content: flex-end; flex-direction: row; gap: 10px; align-items: flex-end;">
+                        <button class="btn btn-success" onclick="generateReport('print')">🖨️ Imprimir</button>
+                        <button class="btn btn-success" onclick="generateReport('download')">📥 Baixar PDF/HTML</button>
+                    </div>
+                </div>
+            </div>
+
+            <div id="reportPreview" style="background: white; padding: 30px; border-radius: 8px; border: 1px solid #e2e8f0; min-height: 400px;">
+                <div style="text-align: center; color: #64748b;">
+                    <p>Selecione o período e clique em gerar para visualizar o relatório.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Status da Câmera -->
+    <div id="cameraStatusModal" class="modal">
+        <div class="modal-content" style="max-width: 500px;">
+            <div class="modal-header">
+                <h2 id="cameraModalTitle">Status da Câmera</h2>
+                <button class="close-btn" onclick="closeCameraModal()">&times;</button>
+            </div>
+            <form id="cameraStatusForm">
+                <input type="hidden" id="modalCamId">
+                <div class="form-group" style="margin-bottom: 15px;">
+                    <label>Status</label>
+                    <select id="modalCamStatus" required>
+                        <option value="Online">Online</option>
+                        <option value="Offline">Offline</option>
+                        <option value="Defeito">Defeito</option>
+                    </select>
+                </div>
+                <div class="form-group" style="margin-bottom: 15px;">
+                    <label>Observações</label>
+                    <textarea id="modalCamObs" placeholder="Relate o problema..."></textarea>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn" onclick="closeCameraModal()">Cancelar</button>
+                    <button type="submit" class="btn btn-success">Salvar Alterações</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal Ocorrência -->
+    <div id="occurrenceModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="modalTitle">Ocorrência</h2>
+                <button class="close-btn" onclick="closeModal()">&times;</button>
+            </div>
+            <form id="occurrenceForm">
+                <div class="form-grid">
+                    <div class="form-group"><label>Data Registro</label><input type="date" id="registrationDate" required></div>
+                    <div class="form-group"><label>Data Ocorrência</label><input type="date" id="occurrenceDate" required></div>
+                    <div class="form-group"><label>Hora Inicial</label><input type="time" id="startTime" required></div>
+                    <div class="form-group"><label>Hora Final</label><input type="time" id="endTime" required></div>
+                    <div class="form-group"><label>Local</label><input type="text" id="location" required></div>
+                    <div class="form-group"><label>Câmera</label><input type="text" id="camera" required></div>
+                    <div class="form-group"><label>Tipo</label><select id="type" required></select></div>
+                    <div class="form-group"><label>Status</label><select id="classification" required><option value="Encerrada">Encerrada</option><option value="Em andamento">Em andamento</option></select></div>
+                    <div class="form-group"><label>Operador</label><select id="operator" required></select></div>
+                    <div class="form-group"><label>Turno</label><select id="shift" required><option value="Diurno">Diurno</option><option value="Noturno">Noturno</option></select></div>
+                    <div class="form-group" style="grid-column: 1/-1"><label>Descrição Técnica</label><textarea id="technicalDescription" required></textarea></div>
+                    <div class="form-group" style="grid-column: 1/-1"><label>Ação Tomada</label><textarea id="actionTaken" required></textarea></div>
+                    <div class="form-group"><label>Órgãos Acionados</label><input type="text" id="agenciesContacted"></div>
+                    <div class="form-group" style="grid-column: 1/-1"><label>Observações</label><textarea id="observations"></textarea></div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn" onclick="closeModal()">Cancelar</button>
+                    <button type="submit" class="btn btn-success">Salvar Ocorrência</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <footer>
+        <p>BY: HARLEYFOUXSTUDIO © 2026 | Sistema de Monitoramento Profissional</p>
+    </footer>
+
+    <script src="script.js"></script>
+</body>
+</html>
